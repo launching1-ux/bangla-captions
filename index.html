@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ক্যাপশন বানান</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef4f0;
+    --ink: #11302a;
+    --muted: #4f6a62;
+    --green: #006a4e;
+    --green-dark: #004d38;
+    --red: #c4322f;
+    --card: #ffffff;
+    --line: #c9d9d1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Hind Siliguri", "Noto Sans Bengali", "Nirmala UI", sans-serif;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-size: 2.4rem; line-height: 1.2; margin: 0 0 8px; font-weight: 700; }
+  .lead { color: var(--muted); margin: 0 0 32px; }
+  label { display: block; font-weight: 500; margin-bottom: 8px; }
+  textarea, input[type="text"] {
+    width: 100%;
+    padding: 14px;
+    font: inherit;
+    color: var(--ink);
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 6px;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  textarea:focus-visible, input:focus-visible, button:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+  .field { margin-bottom: 20px; }
+  .hint { color: var(--muted); font-size: 0.9rem; margin: 6px 0 0; }
+  .go {
+    font: inherit;
+    font-weight: 700;
+    color: #fff;
+    background: var(--green);
+    border: 0;
+    border-radius: 6px;
+    padding: 12px 24px;
+    cursor: pointer;
+  }
+  .go:hover { background: var(--green-dark); }
+  .go:disabled { background: #7aa597; cursor: wait; }
+  #status { margin: 24px 0 0; min-height: 1.6em; color: var(--muted); }
+  #status.error { color: var(--red); font-weight: 500; }
+  #results { margin-top: 8px; display: grid; gap: 16px; }
+  .caption {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 6px solid var(--green);
+    border-radius: 6px;
+    padding: 16px 16px 12px;
+  }
+  .caption p { margin: 0 0 12px; white-space: pre-wrap; }
+  .copy {
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--green);
+    background: transparent;
+    border: 2px solid var(--green);
+    border-radius: 6px;
+    padding: 4px 14px;
+    cursor: pointer;
+  }
+  .copy:hover { background: var(--green); color: #fff; }
+</style>
+</head>
+<body>
+<main>
+  <h1>ফেসবুক ক্যাপশন বানান</h1>
+  <p class="lead">আপনার দোকান আর পণ্যের কথা লিখুন। কয়েক সেকেন্ডে তিনটি ক্যাপশন পেয়ে যাবেন।</p>
+
+  <div class="field">
+    <label for="business">আপনার দোকানের নাম</label>
+    <input id="business" type="text" maxlength="80" placeholder="যেমন: রূপা কালেকশন">
+    <p class="hint">না লিখলেও চলবে।</p>
+  </div>
+
+  <div class="field">
+    <label for="product">আপনি কী বিক্রি করছেন?</label>
+    <textarea id="product" maxlength="300" placeholder="যেমন: লাল সুতির শাড়ি"></textarea>
+    <p class="hint">পণ্যের নাম আর ধরন লিখলে ক্যাপশন ভালো হয়।</p>
+  </div>
+
+  <div class="field">
+    <label for="price">দাম</label>
+    <input id="price" type="text" maxlength="40" placeholder="যেমন: ১২০০ টাকা">
+    <p class="hint">না লিখলেও চলবে।</p>
+  </div>
+
+  <button class="go" id="go">ক্যাপশন বানান</button>
+
+  <p id="status" role="status" aria-live="polite"></p>
+  <div id="results"></div>
+</main>
+
+<script>
+  const businessInput = document.getElementById("business");
+  const input = document.getElementById("product");
+  const priceInput = document.getElementById("price");
+  const goBtn = document.getElementById("go");
+  const statusEl = document.getElementById("status");
+  const results = document.getElementById("results");
+
+  function setStatus(text, isError) {
+    statusEl.textContent = text;
+    statusEl.className = isError ? "error" : "";
+  }
+
+  function showCaptions(captions) {
+    results.innerHTML = "";
+    captions.forEach(function (text) {
+      const card = document.createElement("div");
+      card.className = "caption";
+
+      const p = document.createElement("p");
+      p.textContent = text;
+
+      const btn = document.createElement("button");
+      btn.className = "copy";
+      btn.textContent = "কপি করুন";
+      btn.addEventListener("click", async function () {
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = "কপি হয়েছে";
+        } catch (e) {
+          btn.textContent = "কপি করা যায়নি";
+        }
+        setTimeout(function () { btn.textContent = "কপি করুন"; }, 1500);
+      });
+
+      card.appendChild(p);
+      card.appendChild(btn);
+      results.appendChild(card);
+    });
+  }
+
+  async function makeCaptions() {
+    const product = input.value.trim();
+    if (!product) {
+      setStatus("আগে আপনার পণ্যের কথা লিখুন।", true);
+      input.focus();
+      return;
+    }
+
+    goBtn.disabled = true;
+    results.innerHTML = "";
+    setStatus("ক্যাপশন লেখা হচ্ছে...", false);
+
+    try {
+      const res = await fetch("/caption", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          business: businessInput.value.trim(),
+          product: product,
+          price: priceInput.value.trim()
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus("ক্যাপশন বানানো যায়নি। একটু পরে আবার চেষ্টা করুন।", true);
+      } else {
+        setStatus("", false);
+        showCaptions(data.captions);
+      }
+    } catch (e) {
+      setStatus("সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না। অ্যাপ চালু আছে কি না দেখুন।", true);
+    }
+    goBtn.disabled = false;
+  }
+
+  goBtn.addEventListener("click", makeCaptions);
+</script>
+</body>
+</html>
