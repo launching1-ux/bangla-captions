@@ -1,7 +1,22 @@
 from flask import Flask, jsonify, request, send_file
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 from google import genai
 
 app = Flask(__name__)
+
+# On a host like Render, requests come through a proxy.
+# This makes the limiter see the real visitor instead of the proxy.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
+
+# Each visitor (by IP address) gets a limited number of requests.
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    storage_uri="memory://",
+)
+
 client = genai.Client()  # reads GEMINI_API_KEY from your environment
 
 PROMPT = """You write Facebook captions in natural, friendly Bangla
@@ -23,12 +38,18 @@ Product: {product}
 Price: {price}"""
 
 
+@app.errorhandler(429)
+def too_many_requests(e):
+    return jsonify(error="too many requests"), 429
+
+
 @app.get("/")
 def home():
     return send_file("index.html")
 
 
 @app.post("/caption")
+@limiter.limit("5 per minute;100 per day")
 def caption():
     data = request.get_json(silent=True) or {}
     business = (data.get("business") or "").strip()[:80]
